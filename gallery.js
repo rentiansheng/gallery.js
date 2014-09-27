@@ -8,7 +8,7 @@
  * Date: Mon Jan 30 2012
  */
 
-(function( $, undefined ) {
+(function( $) {
 	
 	/*
 	 * Gallery object.
@@ -24,7 +24,9 @@
 	$.Gallery.defaults 		= {
 		current		: 0,	// index of current item
 		autoplay	: false,// slideshow on / off
-		interval	: 2000  // time between transitions
+		interval	: 2000,  // time between transitions
+		margin		: 0,
+		rotate		: 45
     };
 	
 	$.Gallery.prototype 	= {
@@ -56,18 +58,20 @@
 			
 			}	
 			
-            this.$wrapper.css("-webkit-transition", "-webkit-transform 2s");
+           
 			this.current		= this.options.current;
 			
 			this.isAnim			= false;
+						
+			this.rotate = this.options.rotate;
 			
 			this.$items.css({
 				'opacity'	: 0,
 				'visibility': 'hidden'
-			});
-			
+			});		
 			this._validate();
 			
+			this._translate();
 			this._layout();
 			
 			// load the events
@@ -79,8 +83,6 @@
 				this._startSlideshow();
 			
 			}
-
-			
 			
 		},
 		_validate			: function() {
@@ -92,20 +94,23 @@
 			}	
 		
 		},
-		_layout				: function() {
+		_translate			: function(){
 			this._width = this.$wrapper.width();
-			this._rotate = 45;
-			this._galleryZ = (this._width/2)/ Math.tan((this._rotate/2) / this._width * Math.PI) ;
-			// current, left and right items
+			this._galleryZ = (Math.sin(this.rotate*0.017453293)*(this._width/2)) ;
+			var left = (Math.cos(this.rotate*0.017453293)*(this._width/2)) ;
+			this._translateX = this._width - (this._width/2-left) + this.options.margin;
+
+		},
+		_layout				: function() {
+			
+			
 			this._setItems();
 			
-			// current item is not changed
-			// left and right one are rotated and translated
 			var leftCSS, rightCSS, currentCSS;
 			
 			if( this.support3d && this.supportTrans ) {
 
-				var _transform = 'translateX(-'+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this._rotate+'deg)';
+				var _transform = 'translateX(-'+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this.rotate+'deg)';
 				leftCSS 	= {
 					'-webkit-transform'	: _transform,
 					'-moz-transform'	: _transform,
@@ -114,7 +119,7 @@
 					'transform'		    : _transform
 				};
 
-				_transform = 'translateX('+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this._rotate+'deg)';
+				_transform = 'translateX('+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this.rotate+'deg)';
 				rightCSS	= {
 					'-webkit-transform'	: _transform,
 					'-moz-transform'	: _transform,
@@ -130,33 +135,6 @@
 			
 			}
 			else if( this.support2d && this.supportTrans ) {
-				
-				var _transform = 'translateX(-'+this._width+'px)  scale(0.8)';
-				leftCSS 	= {
-					'-webkit-transform'	: _transform,
-					'-moz-transform'	: _transform,
-					'-o-transform'		: _transform,
-					'-ms-transform'		: _transform,
-					'transform'		    : _transform
-				};
-
-				_transform = 'translateX('+this._width+'px)  scale(0.8)';
-				rightCSS	= {
-					'-webkit-transform'	: _transform,
-					'-moz-transform'	: _transform,
-					'-o-transform'		: _transform,
-					'-ms-transform'		: _transform,
-					'transform'		    : _transform
-				};
-				
-				currentCSS	= {
-					'z-index'			: 999
-				};
-				
-				leftCSS.opacity		= 1;
-				leftCSS.visibility	= 'visible';
-				rightCSS.opacity	= 1;
-				rightCSS.visibility	= 'visible';
 			
 			}
 			
@@ -167,6 +145,7 @@
 				'opacity'	: 1,
 				'visibility': 'visible'
 			}).addClass('dg-center');
+			
 			
 		},
 		_setItems			: function() {
@@ -237,13 +216,39 @@
 				_self.isAnim	= false;
 				
 			});
+			this.$wrapper.on('touchstart mousedown', function(e){
+		        touch = {};
+				if(e.type == "mousedown" ) {
+					touch.x1 = e.x;
+		        	touch.y1 = e.y;
+				} else {
+		        	touch.x1 = e.touches[0].pageX;
+		        	touch.y1 = e.touches[0].pageY;
+				}
+		    }).on('touchmove mousemove', function(e) {
+		        if(e.type == "mousemove" ) {
+					touch.x2 = e.x;
+		        	touch.y2 = e.y;
+				} else {
+		        	touch.x2 = e.touches[0].pageX;
+		        	touch.y2 = e.touches[0].pageY;
+				}
+			}).on('touchend mouseup', function(e){
+		        var dir = swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2);
+		        if(dir == "Left") {
+		            $(this).find("nav .dg-next").click();
+		        } else if(dir == "Right") {               
+		            $(this).find("nav .dg-prev").click();
+		        }
+
+			});
 			
 		},
 		_getCoordinates		: function( position ) {
 			
 			if( this.support3d && this.supportTrans ) {
-				var _transforml = 'translateX(-'+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this._rotate+'deg)';
-				var _transformf = 'translateX('+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this._rotate+'deg)';
+				var _transforml = 'translateX(-'+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this.rotate+'deg)';
+				var _transformf = 'translateX('+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this.rotate+'deg)';
 				switch( position ) {
 					case 'outleft':
 						return {
@@ -296,69 +301,6 @@
 							'-o-transform'		: 'translateX(0px) translateZ(0px) rotateY(0deg)',
 							'-ms-transform'		: 'translateX(0px) translateZ(0px) rotateY(0deg)',
 							'transform'			: 'translateX(0px) translateZ(0px) rotateY(0deg)',
-							'opacity'			: 1,
-							'visibility'		: 'visible'
-						};
-						break;
-				};
-			
-			}
-			else if( this.support2d && this.supportTrans ) {
-				
-				var _transforml = 'translateX(-'+this._width+'px)  scale(0.7)';
-				var _transformr = 'translateX('+this._width+'px)  scale(0.7)';
-				switch( position ) {
-					case 'outleft':
-						return {
-							'-webkit-transform'	: _transforml,
-							'-moz-transform'	: _transforml,
-							'-o-transform'		: _transforml,
-							'-ms-transform'		: _transforml,
-							'transform'			: _transforml,
-							'opacity'			: 0,
-							'visibility'		: 'hidden'
-						};
-						break;
-					case 'outright':
-						return {
-							'-webkit-transform'	: _transformf,
-							'-moz-transform'	: _transformf,
-							'-o-transform'		: _transformf,
-							'-ms-transform'		: _transformf,
-							'transform'			: _transformf,
-							'opacity'			: 0,
-							'visibility'		: 'hidden'
-						};
-						break;
-					case 'left':
-						return {
-							'-webkit-transform'	: _transforml,
-							'-moz-transform'	: _transforml,
-							'-o-transform'		: _transforml,
-							'-ms-transform'		: _transforml,
-							'transform'			: _transforml,
-							'opacity'			: 1,
-							'visibility'		: 'visible'
-						};
-						break;
-					case 'right':
-						return {
-							'-webkit-transform'	: _transformf,
-							'-moz-transform'	: _transformf,
-							'-o-transform'		: _transformf,
-							'-ms-transform'		: _transformf,
-							'transform'			: _transformf,
-							'opacity'			: 1,
-							'visibility'		: 'visible'
-						};
-						break;
-					case 'center':
-						return {
-							'-webkit-transform'	: 'translate(0px) scale(1)',
-							'-moz-transform'	: 'translate(0px) scale(1)',
-							'-o-transform'		: 'translate(0px) scale(1)',
-							'-ms-transform'		: 'translate(0px) scale(1)',
-							'transform'			: 'translate(0px) scale(1)',
 							'opacity'			: 1,
 							'visibility'		: 'visible'
 						};
@@ -493,7 +435,11 @@
 			this.$navNext.off('.gallery');
 			this.$wrapper.off('.gallery');
 			
-		}
+		},
+		
+		getCurrentItem		: function() {
+			return this.current;
+		},
 	};
 	
 	var logError 			= function( message ) {
@@ -503,14 +449,15 @@
 	};
 	
 	$.fn.gallery			= function( options ) {
-	
+		
+		var result = {};
 		if ( typeof options === 'string' ) {
 			
 			var args = Array.prototype.slice.call( arguments, 1 );
 			
 			this.each(function() {
 			
-				var instance = $(this).data( 'gallery' );
+				var instance = $(this).data('gallery');
 				
 				if ( !instance ) {
 					logError( "cannot call methods on gallery prior to initialization; " +
@@ -518,30 +465,35 @@
 					return;
 				}
 				
+				instance = $.fn.gallery.lookup[$(this).data('gallery')];
 				if ( !$.isFunction( instance[options] ) || options.charAt(0) === "_" ) {
 					logError( "no such method '" + options + "' for gallery instance" );
 					return;
 				}
 				
-				instance[ options ].apply( instance, args );
-			
+				
+				result  = instance[ options ].apply( instance, args );
 			});
 		
-		} 
-		else {
+		} else {
 		
 			this.each(function() {
 			
-				var instance = $(this).data('gallery' );
+				var instance = $(this).data('gallery');
 				if ( !instance ) {
-					$(this).data( 'gallery', new $.Gallery( options, this ) );
+					instance = $.fn.gallery.lookup[$(this).data('gallery')];
+					$.fn.gallery.lookup[++$.fn.gallery.lookup.i] = new $.Gallery( options, this );
+		            $(this).data('gallery', $.fn.gallery.lookup.i);
+
 				}
 			});
-		
+			result = this;
 		}
 		
-		return this;
+		return result ;
 		
 	};
 	
-})( Zepto );
+
+	$.fn.gallery.lookup = {i:0};
+})( Zepto || JQuery);
