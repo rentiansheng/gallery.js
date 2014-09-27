@@ -148,7 +148,7 @@ border-spacing: 0;
        
         function swipeDirection(x1, x2, y1, y2) {
             return Math.abs(x1 - x2) >=
-                  Math.abs(y1 - y2) ? (x1 - x2 > 0 ? 'Left' : 'Right') : (y1 - y2 > 0 ? 'Up' : 'Down')
+                  Math.abs(y1 - y2) ? (x1 - x2 > 0 ? 'Left' : 'Right') : (y1 - y2 > 0 ? 'Up' : 'Down');
         }
         var touch = {};
 		$(".dg-container11").on('touchstart mousedown', function(e){
@@ -231,10 +231,7 @@ border-spacing: 0;
 	display: block;
 	position: absolute;
 	box-shadow: 0px 5px 5px rgba(0,0,0,0.3);
-    transition: transform 1s;
-    -moz-transition: -moz-transform 1s;
-    -o-transition: -o-transform 1s;
-    -ms-transition: -ms-transform 1s;
+    
 	max-width:371px;
 	max-height:635px;
 

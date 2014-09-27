@@ -95,6 +95,7 @@
 		
 		},
 		_translate			: function(){
+			this.$wrapper.css({'transition': 'transform 1s','-moz-transition': '-moz-transform 1s','-o-transition': '-o-transform 1s','-ms-transition': '-ms-transform 1s','height':'100%'});
 			this._width = this.$wrapper.width();
 			this._galleryZ = (Math.sin(this.rotate*0.017453293)*(this._width/2)) ;
 			var left = (Math.cos(this.rotate*0.017453293)*(this._width/2)) ;
@@ -216,6 +217,7 @@
 				_self.isAnim	= false;
 				
 			});
+			var touch = {};
 			this.$wrapper.on('touchstart mousedown', function(e){
 		        touch = {};
 				if(e.type == "mousedown" ) {
@@ -234,11 +236,13 @@
 		        	touch.y2 = e.touches[0].pageY;
 				}
 			}).on('touchend mouseup', function(e){
-		        var dir = swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2);
+		        var dir = Math.abs(touch.x1 - touch.x2) >=
+		              Math.abs(touch.y1 - touch.y2) ? (touch.x1 - touch.x2 > 0 ? 'Left' : 'Right') : (touch.y1 - touch.y2 > 0 ? 'Up' : 'Down');;
 		        if(dir == "Left") {
-		            $(this).find("nav .dg-next").click();
+		            _self._navigate('next');//$(this).find("nav .dg-next").click();
 		        } else if(dir == "Right") {               
-		            $(this).find("nav .dg-prev").click();
+		            //$(this).find("nav .dg-prev").click();
+					_self._navigate('prev');
 		        }
 
 			});
