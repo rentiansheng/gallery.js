@@ -39,6 +39,7 @@
 			this.support2d		= Modernizr.csstransforms;
 			this.supportTrans	= Modernizr.csstransitions;
 			
+			this.$container 	= this.$el;
 			this.$wrapper		= this.$el.find('.dg-wrapper');
 			
 			this.$items			= this.$wrapper.children();
@@ -95,7 +96,7 @@
 		
 		},
 		_translate			: function(){
-			this.$wrapper.css({'transition': 'transform 1s','-moz-transition': '-moz-transform 1s','-o-transition': '-o-transform 1s','-ms-transition': '-ms-transform 1s','height':'100%'});
+			this.$wrapper.css({'transition': 'transform 1s','-moz-transition': '-moz-transform 1s','-o-transition': '-o-transform 1s','-ms-transition': '-ms-transform 1s'});
 			this._width = this.$wrapper.width();
 			this._galleryZ = (Math.sin(this.rotate*0.017453293)*(this._width/2)) ;
 			var left = (Math.cos(this.rotate*0.017453293)*(this._width/2)) ;
@@ -218,7 +219,7 @@
 				
 			});
 			var touch = {};
-			this.$wrapper.on('touchstart mousedown', function(e){
+			this.$container.on('touchstart mousedown', function(e){
 		        touch = {};
 				if(e.type == "mousedown" ) {
 					touch.x1 = e.x;
