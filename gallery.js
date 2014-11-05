@@ -1,19 +1,9 @@
-/**
- * jquery.gallery.js
- * http://www.codrops.com
- *
- * Copyright 2011, Pedro Botelho / Codrops
- * Free to use under the MIT license.
- *
- * Date: Mon Jan 30 2012
- */
-
-(function( $) {
+(function( $, undefined ) {
 	
 	/*
 	 * Gallery object.
 	 */
-	$.Gallery 				= function( options, element ) {
+	$.Gallery = function( options, element ) {
 	
 		this.$el	= $( element );
 		this._init( options );
@@ -25,8 +15,8 @@
 		current		: 0,	// index of current item
 		autoplay	: false,// slideshow on / off
 		interval	: 2000,  // time between transitions
-		margin		: 0,
-		rotate		: 45
+		rotate		: 45,
+		width		: 217,
     };
 	
 	$.Gallery.prototype 	= {
@@ -39,8 +29,8 @@
 			this.support2d		= Modernizr.csstransforms;
 			this.supportTrans	= Modernizr.csstransitions;
 			
-			this.$container 	= this.$el;
 			this.$wrapper		= this.$el.find('.dg-wrapper');
+			this.$container		= this.$el;
 			
 			this.$items			= this.$wrapper.children();
 			this.itemsCount		= this.$items.length;
@@ -59,20 +49,23 @@
 			
 			}	
 			
-           
 			this.current		= this.options.current;
 			
 			this.isAnim			= false;
-						
-			this.rotate = this.options.rotate;
 			
 			this.$items.css({
 				'opacity'	: 0,
 				'visibility': 'hidden'
-			});		
+			});
+			
+
+			
+			this._galleryZ = parseInt(Math.cos(this.options.rotate*0.017453293)*(this.options.width/2)) + 20;
+			this._width = this.options.width*2/3;
+			this._rotate = this.options.rotate;
+
 			this._validate();
 			
-			this._translate();
 			this._layout();
 			
 			// load the events
@@ -84,6 +77,8 @@
 				this._startSlideshow();
 			
 			}
+
+			
 			
 		},
 		_validate			: function() {
@@ -95,60 +90,15 @@
 			}	
 		
 		},
-		_translate			: function(){
-			this.$wrapper.css({'transition': 'transform 1s','-moz-transition': '-moz-transform 1s','-o-transition': '-o-transform 1s','-ms-transition': '-ms-transform 1s'});
-			this._width = this.$wrapper.width();
-			this._galleryZ = (Math.sin(this.rotate*0.017453293)*(this._width/2)) ;
-			var left = (Math.cos(this.rotate*0.017453293)*(this._width/2)) ;
-			this._translateX = this._width - (this._width/2-left) + this.options.margin;
-
-		},
 		_layout				: function() {
 			
-			
+			// current, left and right items
 			this._setItems();
 			
-			var leftCSS, rightCSS, currentCSS;
 			
-			if( this.support3d && this.supportTrans ) {
-
-				var _transform = 'translateX(-'+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this.rotate+'deg)';
-				leftCSS 	= {
-					'-webkit-transform'	: _transform,
-					'-moz-transform'	: _transform,
-					'-o-transform'		: _transform,
-					'-ms-transform'		: _transform,
-					'transform'		    : _transform
-				};
-
-				_transform = 'translateX('+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this.rotate+'deg)';
-				rightCSS	= {
-					'-webkit-transform'	: _transform,
-					'-moz-transform'	: _transform,
-					'-o-transform'		: _transform,
-					'-ms-transform'		: _transform,
-					'transform'		    : _transform
-				};
-				
-				leftCSS.opacity		= 1;
-				leftCSS.visibility	= 'visible';
-				rightCSS.opacity	= 1;
-				rightCSS.visibility	= 'visible';
-			
-			}
-			else if( this.support2d && this.supportTrans ) {
-			
-			}
-			
-			this.$leftItm.css(  rightCSS || {} );
-			this.$rightItm.css(  leftCSS || {} );
-			
-			this.$currentItm.css( currentCSS || {} ).css({
-				'opacity'	: 1,
-				'visibility': 'visible'
-			}).addClass('dg-center');
-			
-			
+			this.$rightItm.css( this._getCoordinates('right') );
+			this.$leftItm.css( this._getCoordinates('left') );
+			this.$currentItm.css( this._getCoordinates('center') );		
 		},
 		_setItems			: function() {
 			
@@ -240,9 +190,7 @@
 		        var dir = Math.abs(touch.x1 - touch.x2) >=
 		              Math.abs(touch.y1 - touch.y2) ? (touch.x1 - touch.x2 > 0 ? 'Left' : 'Right') : (touch.y1 - touch.y2 > 0 ? 'Up' : 'Down');;
 		        if(dir == "Left") {
-		            _self._navigate('next');//$(this).find("nav .dg-next").click();
 		        } else if(dir == "Right") {               
-		            //$(this).find("nav .dg-prev").click();
 					_self._navigate('prev');
 		        }
 
@@ -252,27 +200,31 @@
 		_getCoordinates		: function( position ) {
 			
 			if( this.support3d && this.supportTrans ) {
-				var _transforml = 'translateX(-'+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this.rotate+'deg)';
-				var _transformf = 'translateX('+this._translateX+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this.rotate+'deg)';
+				var _transforml = 'translateX(-'+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY('+this._rotate+'deg)';
+				var _transformr = 'translateX('+this._width+'px) translateZ(-'+this._galleryZ+'px) rotateY(-'+this._rotate+'deg)';
+				var _transformlo = 'translateX(-'+(this._width*5/2)+'px) translateZ(-'+(this._galleryZ+50)+'px) rotateY('+this._rotate+'deg)';
+				var _transformro = 'translateX('+(this._width*5/2)+'px) translateZ(-'+(this._galleryZ+50)+'px) rotateY(-'+this._rotate+'deg)';
 				switch( position ) {
 					case 'outleft':
 						return {
-							'-webkit-transform'	: _transforml,
-							'-moz-transform'	: _transforml,
-							'-o-transform'		: _transforml,
-							'-ms-transform'		: _transforml,
-							'transform'		    : _transforml,
+							'-webkit-transform'	: _transformlo,
+							'-moz-transform'	: _transformlo,
+							'-o-transform'		: _transformlo,
+							'-ms-transform'		: _transformlo,
+							'transform'		    : _transformlo,
+							'z-index'			: 1,
 							'opacity'			: 0,
 							'visibility'		: 'hidden'
 						};
 						break;
 					case 'outright':
 						return {
-							'-webkit-transform'	: _transformf,
-							'-moz-transform'	: _transformf,
-							'-o-transform'		: _transformf,
-							'-ms-transform'		: _transformf,
-							'transform'		    : _transformf,
+							'-webkit-transform'	: _transformro,
+							'-moz-transform'	: _transformro,
+							'-o-transform'		: _transformro,
+							'-ms-transform'		: _transformro,
+							'transform'		    : _transformro,
+							'z-index'			: 1,
 							'opacity'			: 0,
 							'visibility'		: 'hidden'
 						};
@@ -284,17 +236,19 @@
 							'-o-transform'		: _transforml,
 							'-ms-transform'		: _transforml,
 							'transform'		    : _transforml,
+							'z-index'			: 1,
 							'opacity'			: 1,
 							'visibility'		: 'visible'
 						};
 						break;
 					case 'right':
 						return {
-							'-webkit-transform'	: _transformf,
-							'-moz-transform'	: _transformf,
-							'-o-transform'		: _transformf,
-							'-ms-transform'		: _transformf,
-							'transform'		    : _transformf,
+							'-webkit-transform'	: _transformr,
+							'-moz-transform'	: _transformr,
+							'-o-transform'		: _transformr,
+							'-ms-transform'		: _transformr,
+							'transform'		    : _transformr,
+							'z-index'			: 1,
 							'opacity'			: 1,
 							'visibility'		: 'visible'
 						};
@@ -306,6 +260,75 @@
 							'-o-transform'		: 'translateX(0px) translateZ(0px) rotateY(0deg)',
 							'-ms-transform'		: 'translateX(0px) translateZ(0px) rotateY(0deg)',
 							'transform'			: 'translateX(0px) translateZ(0px) rotateY(0deg)',
+							'z-index'			: 999,
+							'opacity'			: 1,
+							'visibility'		: 'visible'
+						};
+						break;
+				};
+			
+			}
+			else if( this.support2d && this.supportTrans ) {
+				
+				var _transforml = 'translateX(-'+this._width+'px)  scale(0.7)';
+				var _transformr = 'translateX('+this._width+'px)  scale(0.7)';
+				switch( position ) {
+					case 'outleft':
+						return {
+							'-webkit-transform'	: _transforml,
+							'-moz-transform'	: _transforml,
+							'-o-transform'		: _transforml,
+							'-ms-transform'		: _transforml,
+							'transform'			: _transforml,
+							'z-index'			: 1,
+							'opacity'			: 0,
+							'visibility'		: 'hidden'
+						};
+						break;
+					case 'outright':
+						return {
+							'-webkit-transform'	: _transformr,
+							'-moz-transform'	: _transformr,
+							'-o-transform'		: _transformr,
+							'-ms-transform'		: _transformr,
+							'transform'			: _transformr,
+							'z-index'			: 1,
+							'opacity'			: 0,
+							'visibility'		: 'hidden'
+						};
+						break;
+					case 'left':
+						return {
+							'-webkit-transform'	: _transforml,
+							'-moz-transform'	: _transforml,
+							'-o-transform'		: _transforml,
+							'-ms-transform'		: _transforml,
+							'transform'			: _transforml,
+							'z-index'			: 1,
+							'opacity'			: 1,
+							'visibility'		: 'visible'
+						};
+						break;
+					case 'right':
+						return {
+							'-webkit-transform'	: _transformr,
+							'-moz-transform'	: _transformr,
+							'-o-transform'		: _transformr,
+							'-ms-transform'		: _transformr,
+							'transform'			: _transformr,
+							'z-index'			: 1,
+							'opacity'			: 1,
+							'visibility'		: 'visible'
+						};
+						break;
+					case 'center':
+						return {
+							'-webkit-transform'	: 'translate(0px) scale(1)',
+							'-moz-transform'	: 'translate(0px) scale(1)',
+							'-o-transform'		: 'translate(0px) scale(1)',
+							'-ms-transform'		: 'translate(0px) scale(1)',
+							'transform'			: 'translate(0px) scale(1)',
+							'z-index'			: 999,
 							'opacity'			: 1,
 							'visibility'		: 'visible'
 						};
@@ -353,17 +376,20 @@
 				
 			this.isAnim	= true;
 			
+
 			switch( dir ) {
 			
 				case 'next' :
 					
 					this.current	= this.$rightItm.index();
 					
+					// right item moves to the center
+					this.$rightItm.addClass('dg-transition').css( this._getCoordinates('center') );
+
 					// current item moves left
 					this.$currentItm.addClass('dg-transition').css( this._getCoordinates('left') );
 					
-					// right item moves to the center
-					this.$rightItm.addClass('dg-transition').css( this._getCoordinates('center') );	
+						
 					
 					// next item moves to the right
 					if( this.$nextItm ) {
@@ -434,17 +460,17 @@
 			}, this.options.interval );
 		
 		},
+		getCurrentItem		: function() {
+			return this.$currentItm;
+		},
 		destroy				: function() {
 			
 			this.$navPrev.off('.gallery');
 			this.$navNext.off('.gallery');
 			this.$wrapper.off('.gallery');
 			
-		},
-		
-		getCurrentItem		: function() {
-			return this.current;
-		},
+		}
+
 	};
 	
 	var logError 			= function( message ) {
@@ -454,51 +480,51 @@
 	};
 	
 	$.fn.gallery			= function( options ) {
-		
+	
 		var result = {};
 		if ( typeof options === 'string' ) {
-			
+		
 			var args = Array.prototype.slice.call( arguments, 1 );
-			
+		
 			this.each(function() {
-			
+		
 				var instance = $(this).data('gallery');
-				
+			
 				if ( !instance ) {
 					logError( "cannot call methods on gallery prior to initialization; " +
 					"attempted to call method '" + options + "'" );
 					return;
 				}
-				
+			
 				instance = $.fn.gallery.lookup[$(this).data('gallery')];
 				if ( !$.isFunction( instance[options] ) || options.charAt(0) === "_" ) {
 					logError( "no such method '" + options + "' for gallery instance" );
 					return;
 				}
-				
-				
+			
+			
 				result  = instance[ options ].apply( instance, args );
 			});
-		
+	
 		} else {
-		
+	
 			this.each(function() {
-			
+		
 				var instance = $(this).data('gallery');
 				if ( !instance ) {
 					instance = $.fn.gallery.lookup[$(this).data('gallery')];
 					$.fn.gallery.lookup[++$.fn.gallery.lookup.i] = new $.Gallery( options, this );
-		            $(this).data('gallery', $.fn.gallery.lookup.i);
+			        $(this).data('gallery', $.fn.gallery.lookup.i);
 
 				}
 			});
 			result = this;
 		}
-		
-		return result ;
-		
-	};
 	
+		return result ;
+	
+	};
+
 
 	$.fn.gallery.lookup = {i:0};
-})( Zepto || JQuery);
+})( Zepto );
