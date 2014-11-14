@@ -12,11 +12,13 @@
 
 	
 	$.Gallery.defaults 		= {
+        typeo       : 1,
 		current		: 0,	// index of current item
 		autoplay	: false,// slideshow on / off
 		interval	: 2000,  // time between transitions
 		rotate		: 45,
 		width		: 217,
+        distance    : 2/3,
     };
 	
 	$.Gallery.prototype 	= {
@@ -61,7 +63,7 @@
 
 			
 			this._galleryZ = parseInt(Math.cos(this.options.rotate*0.017453293)*(this.options.width/2)) + 20;
-			this._width = this.options.width*2/3;
+			this._width = this.options.width*this.options.distance;
 			this._rotate = this.options.rotate;
 
 			this._validate();
@@ -138,11 +140,12 @@
 				if( _self.options.autoplay ) {
 				
 					clearTimeout( _self.slideshow );
-					_self.options.autoplay	= false;
-				
-				}
-				
-				_self._navigate('prev');
+					//_self.options.autoplay	= false;
+                    _self._navigate('prev');
+                    _self._startSlideshow();
+				}  else {
+                    _self._navigate('prev');
+                }
 				return false;
 				
 			});
@@ -152,15 +155,23 @@
 				if( _self.options.autoplay ) {
 				
 					clearTimeout( _self.slideshow );
-					_self.options.autoplay	= false;
+					//_self.options.autoplay	= false;
+                    _self._navigate('next');
+                    _self._startSlideshow();
+                    
 				
-				}
-				
-				_self._navigate('next');
+				} else {
+                    _self._navigate('next');
+                }
 				return false;
 				
 			});
-			
+
+			this.$items.on("click.gallery", function(event){
+                
+                
+            });
+
 			this.$wrapper.on( 'webkitTransitionEnd.gallery transitionend.gallery OTransitionEnd.gallery', function( event ) {
 				
 				_self.$currentItm.addClass('dg-center');
@@ -170,6 +181,7 @@
 			});
 			var touch = {};
 			this.$container.on('touchstart mousedown', function(e){
+                e.preventDefault();
 		        touch = {};
 				if(e.type == "mousedown" ) {
 					touch.x1 = e.x;
