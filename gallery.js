@@ -167,11 +167,6 @@
 				
 			});
 
-			this.$items.on("click.gallery", function(event){
-                
-                
-            });
-
 			this.$wrapper.on( 'webkitTransitionEnd.gallery transitionend.gallery OTransitionEnd.gallery', function( event ) {
 				
 				_self.$currentItm.addClass('dg-center');
@@ -199,12 +194,20 @@
 		        	touch.y2 = e.touches[0].pageY;
 				}
 			}).on('touchend mouseup', function(e){
-		        var dir = Math.abs(touch.x1 - touch.x2) >=
-		              Math.abs(touch.y1 - touch.y2) ? (touch.x1 - touch.x2 > 0 ? 'Left' : 'Right') : (touch.y1 - touch.y2 > 0 ? 'Up' : 'Down');;
+                var xd = Math.abs(touch.x1 - touch.x2) ;
+		        var yd = Math.abs(touch.y1 - touch.y2) ;
+                if(xd<10 && xs<10) {
+                    dir = "none";
+                } else {
+                    dir = xd>yd?(touch.x1 - touch.x2 > 0 ? 'Left' : 'Right') : (touch.y1 - touch.y2 > 0 ? 'Up' : 'Down');;
+                }
 		        if(dir == "Left") {
+					_self._navigate('next');
 		        } else if(dir == "Right") {               
 					_self._navigate('prev');
-		        }
+		        } else {
+
+                }
 
 			});
 			
